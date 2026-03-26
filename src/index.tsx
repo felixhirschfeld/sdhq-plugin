@@ -1,96 +1,98 @@
-import { definePlugin, ServerAPI, staticClasses } from "decky-frontend-lib"
-import { useEffect, useState, VFC } from "react"
+import { definePlugin, staticClasses } from "@decky/ui";
+import { FC, useEffect, useState } from "react";
 
-import { getCurrentAppId } from "./helpers"
-import HomePage from "./pages/home"
-import HQLogo from "./pages/HQLogo"
-import { ReviewPage } from "./pages/review"
-import { getLatestReviews, getNews, getSettings } from "./requests"
-import { GameReview, NewsItem } from "./sdhq-types"
+import { getCurrentAppId } from "./helpers";
+import HQLogo from "./pages/HQLogo";
+import HomePage from "./pages/home";
+import { ReviewPage } from "./pages/review";
+import { getLatestReviews, getNews, getReviewForApp } from "./requests";
+import { GameReview, NewsItem } from "./sdhq-types";
 
-//@ts-ignore
-window.sdhqReview = null
+const Content: FC = () => {
+  const [page, setPage] = useState<"home" | "review">("home");
+  const [newsItems, setNewsitems] = useState<NewsItem[]>([]);
+  const [review, setReview] = useState<GameReview | null | undefined>();
+  const [currentAppId, setCurrentAppId] = useState<string | null | undefined>(
+    undefined,
+  );
+  const [latestReviews, setLatestReviews] = useState<GameReview[] | null>(null);
 
-const Content: VFC<{ serverAPI: ServerAPI }> = ({ serverAPI }) => {
-	const [page, setPage] = useState<"home" | "review">("home")
-	const [newsItems, setNewsitems] = useState<NewsItem[]>([])
-	const [review, setReview] = useState<GameReview | null | undefined>()
-	const [currentAppId, setCurrentAppId] = useState<string | null | undefined>(
-		undefined
-	)
-	const [latestReviews, setLatestReviews] = useState<null | GameReview[]>(
-		null
-	)
+  useEffect(() => {
+    if (currentAppId === undefined) {
+      return;
+    }
 
-	const refreshAppId = () => {
-		getCurrentAppId(serverAPI).then((appId) => setCurrentAppId(appId))
-	}
+    if (currentAppId === null) {
+      setReview(null);
+      setPage("home");
+      return;
+    }
 
-	useEffect(() => {
-		//@ts-ignore
-		if (currentAppId === undefined && window.sdhqReview) {
-			//@ts-ignore
-			setReview(window.sdhqReview)
-			setPage("review")
-		} else if (currentAppId) {
-			if (
-				//@ts-ignore
-				window.sdhqReview &&
-				//@ts-ignore
-				window.sdhqReview.acf.steam_app_id === currentAppId
-			) {
-				//@ts-ignore
-				setReview(window.sdhqReview)
-				setPage("review")
-			} else {
-				getSettings(serverAPI, currentAppId).then((settings) => {
-					setReview(settings[0])
-					setPage("home")
-				})
-			}
-		} else {
-			setPage("home")
-			//@ts-ignore
-			window.sdhqReview = null
-		}
-	}, [currentAppId])
+    let cancelled = false;
 
-	useEffect(() => {
-		if (page === "home") {
-			//@ts-ignore
-			window.sdhqReview = null
-		} else if (page === "review") {
-			//@ts-ignore
-			window.sdhqReview = review
-		}
-	}, [page])
+    const loadReview = async () => {
+      const nextReview = await getReviewForApp(currentAppId);
+      if (cancelled) {
+        return;
+      }
 
-	useEffect(() => {
-		refreshAppId()
-		getNews(serverAPI).then((news) => setNewsitems(news))
-		getLatestReviews(serverAPI).then((reviews) => setLatestReviews(reviews))
-	}, [])
+      setReview(nextReview);
+      setPage("home");
+    };
 
-	if (page === "review" && review)
-		return <ReviewPage review={review} setPage={setPage} />
+    loadReview();
 
-	return (
-		<HomePage
-			review={review}
-			newsItems={newsItems}
-			setPage={setPage}
-			reviewItems={latestReviews}
-			appIsActive={currentAppId !== null}
-		/>
-	)
-}
+    return () => {
+      cancelled = true;
+    };
+  }, [currentAppId]);
 
-export default definePlugin((serverApi: ServerAPI) => {
-	return {
-		title: <div className={staticClasses.Title}>Steam Deck HQ</div>,
-		content: <Content serverAPI={serverApi} />,
-		icon: <HQLogo />,
-		alwaysRender: false,
-		onDismount() {},
-	}
-})
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadData = async () => {
+      const [appId, news, reviews] = await Promise.all([
+        getCurrentAppId(),
+        getNews(),
+        getLatestReviews(),
+      ]);
+      if (cancelled) {
+        return;
+      }
+
+      setCurrentAppId(appId);
+      setNewsitems(news);
+      setLatestReviews(reviews);
+    };
+
+    loadData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (page === "review" && review) {
+    return <ReviewPage review={review} setPage={setPage} />;
+  }
+
+  return (
+    <HomePage
+      review={review}
+      newsItems={newsItems}
+      setPage={setPage}
+      reviewItems={latestReviews}
+      appIsActive={currentAppId !== null}
+    />
+  );
+};
+
+export default definePlugin(() => {
+  return {
+    name: "Steam Deck HQ",
+    title: <div className={staticClasses.Title}>Steam Deck HQ</div>,
+    content: <Content />,
+    icon: <HQLogo />,
+    onDismount() {},
+  };
+});

@@ -1,6 +1,6 @@
-import { ButtonItem, Navigation, PanelSection } from "decky-frontend-lib"
+import { ButtonItem, Navigation, PanelSection } from "@decky/ui"
 import parse from "html-react-parser"
-import { useEffect } from "react"
+import { ReactNode } from "react"
 
 import { Scrollable, scrollableRef, ScrollArea } from "../components/scrollable"
 import { GameReview } from "../sdhq-types"
@@ -16,7 +16,7 @@ const SDHQSetting = ({
 	titleTop,
 }: {
 	title: string
-	value: string
+	value: ReactNode
 	titleTop?: boolean
 }) => (
 	<div
@@ -40,12 +40,8 @@ const SDHQSetting = ({
 
 export const ReviewPage = ({ review, setPage }: ReviewPageProps) => {
 	const ref = scrollableRef()
-	useEffect(() => {
-		console.log(review)
-		// console.log(typeof review)
-	}, [])
 	return (
-		<Scrollable ref={ref} scrollSpeed={100}>
+		<Scrollable ref={ref}>
 			<PanelSection title={review.title.rendered}>
 				<ButtonItem layout="inline" onClick={() => setPage("home")}>
 					Go Home

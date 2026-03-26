@@ -2,6 +2,7 @@
 	"name": "Steam Deck HQ",
 	"author": "davocarli",
 	"flags": [],
+	"api_version": 1,
 	"publish": {
 		"tags": ["sdhq"],
 		"description": "Official plugin from Steam Deck HQ. Allows you to browse game reviews and recommended settings.",

@@ -4,7 +4,7 @@ import {
 	Navigation,
 	PanelSection,
 	PanelSectionRow
-} from "decky-frontend-lib"
+} from "@decky/ui"
 
 import badge from "../../assets/bestOnDeck-badge.png"
 import logo from "../../assets/sdhq-logo.png"
@@ -82,6 +82,7 @@ export const HomePage = ({
 					<>
 						{reviewItems.map((gameReview) => (
 							<ButtonItem
+								key={gameReview.id}
 								layout="below"
 								onClick={() =>
 									Navigation.NavigateToExternalWeb(
@@ -113,7 +114,7 @@ export const HomePage = ({
 					</PanelSectionRow>
 				) : null}
 				{newsItems.map((news) => (
-					<PanelSectionRow>
+					<PanelSectionRow key={news.id}>
 						<ButtonItem
 							layout="below"
 							onClick={() =>

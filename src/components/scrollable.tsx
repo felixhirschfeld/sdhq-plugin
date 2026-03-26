@@ -3,40 +3,36 @@ import {
 	FocusableProps,
 	GamepadButton,
 	GamepadEvent,
-	ServerAPI
-} from "decky-frontend-lib"
-import React, { FC, ForwardRefExoticComponent, useRef } from "react"
+} from "@decky/ui"
+import React, { CSSProperties, FC, Ref, forwardRef, useRef } from "react"
 
 const DEFAULTSCROLLSPEED = 50
 
 export interface ScrollableElement extends HTMLDivElement {}
 
 export function scrollableRef() {
-	return useRef<ScrollableElement>(null)
+	return useRef<ScrollableElement | null>(null)
 }
 
-export const Scrollable: ForwardRefExoticComponent<any> = React.forwardRef(
+export const Scrollable = forwardRef<ScrollableElement, React.HTMLAttributes<ScrollableElement>>(
 	(props, ref) => {
-		if (!props.style) {
-			props.style = {}
+		const style: CSSProperties = {
+			...props.style,
+			height: "95vh",
+			overflowY: "scroll",
 		}
-		// props.style.minHeight = '100%';
-		// props.style.maxHeight = '80%';
-		props.style.height = "95vh"
-		props.style.overflowY = "scroll"
 
 		return (
 			<React.Fragment>
-				<div ref={ref} {...props} />
+				<div {...props} ref={ref as Ref<HTMLDivElement>} style={style} />
 			</React.Fragment>
 		)
 	}
 )
 
 interface ScrollAreaProps extends FocusableProps {
-	scrollable: React.RefObject<ScrollableElement>
+	scrollable: React.RefObject<ScrollableElement | null>
 	scrollSpeed?: number
-	serverApi?: ServerAPI
 }
 
 // const writeLog = async (serverApi: ServerAPI, content: any) => {
@@ -46,10 +42,10 @@ interface ScrollAreaProps extends FocusableProps {
 
 const scrollOnDirection = (
 	e: GamepadEvent,
-	ref: React.RefObject<ScrollableElement>,
+	ref: React.RefObject<ScrollableElement | null>,
 	amt: number,
-	prev: React.RefObject<HTMLDivElement>,
-	next: React.RefObject<HTMLDivElement>
+	prev: React.RefObject<HTMLDivElement | null>,
+	next: React.RefObject<HTMLDivElement | null>
 ) => {
 	let childNodes = ref.current?.childNodes
 	let currentIndex = null
@@ -59,12 +55,13 @@ const scrollOnDirection = (
 		}
 	})
 
-	// @ts-ignore
-	let pos = e.currentTarget?.getBoundingClientRect()
-	let out = ref.current?.getBoundingClientRect()
+	const currentTarget = e.currentTarget as HTMLElement | null
+	const pos = currentTarget?.getBoundingClientRect()
+	const out = ref.current?.getBoundingClientRect()
 
 	if (e.detail.button == GamepadButton.DIR_DOWN) {
 		if (
+			pos != undefined &&
 			out?.bottom != undefined &&
 			pos.bottom <= out.bottom &&
 			currentIndex != null &&
@@ -77,6 +74,7 @@ const scrollOnDirection = (
 		}
 	} else if (e.detail.button == GamepadButton.DIR_UP) {
 		if (
+			pos != undefined &&
 			out?.top != undefined &&
 			pos.top >= out.top &&
 			currentIndex != null &&
