@@ -7,7 +7,7 @@ if [ "$EUID" -eq 0 ]; then
   exit
 fi
 
-github_api_url="https://api.github.com/repos/felixhirschfeld/sdhq-plugin/releases/latest"
+github_api_url="https://api.github.com/repos/DeckFilter/sdhq-plugin/releases/latest"
 package="sdhq-plugin"
 
 echo "installing $package"

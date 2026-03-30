@@ -9,5 +9,5 @@ Official plugin from Steam Deck HQ. Allows you to browse game reviews and recomm
 Run the following in terminal:
 
 ```bash
-curl -L https://raw.githubusercontent.com/felixhirschfeld/sdhq-plugin/main/install.sh | sh
+curl -L https://raw.githubusercontent.com/DeckFilter/sdhq-plugin/main/install.sh | sh
 ```
